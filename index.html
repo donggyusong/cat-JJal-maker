@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>고양이 가라사대</title>
+  </head>
+  <style>
+    body {
+      text-align: center;
+    }
+    .main-card button {
+      position: relative;
+      left: -45px;
+      bottom: 15px;
+    }
+    .favorites {
+      list-style: none;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+  </style>
+  <body>
+
+    <div id="App"></div>
+
+    <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script type="text/babel">
+    const jsonLocalStorage = {
+      setItem: (key, value) => {
+        localStorage.setItem(key, JSON.stringify(value));
+      },
+      getItem: (key) => {
+        return JSON.parse(localStorage.getItem(key));
+      },
+    };
+
+      console.log("야옹");
+      
+      //고양이 사진을 감싸는 li를 만들고
+      //그 안에 고양이 이미지를 넣고 그 li를 브라우저에
+      //추가해보자
+
+      const 여기다가그려 = document.querySelector("#App")
+
+     
+      function CatItem(props){
+        
+        console.log("CatItem ==> render")
+
+        return (
+          <li>
+            <img src={props.img} style={{ width:"150px"}}/>
+          </li>
+        )
+      }
+
+      function Favorites({cats}){
+
+        console.log("Favorites ==> render")
+
+        return(
+          <ul className="favorites">
+            {cats.map(cat => <CatItem img={cat} key={cat}/>)}
+          </ul>
+        )
+      }
+
+      //화살표 함수로 컴포넌트 만들기
+      const MainCard = ({img,onHeartClick})=>{
+
+        console.log("MainCard ==> render");
+    
+        function handleHeartMouseOver(){
+          console.log('하트 스쳐 지나감');
+        }
+        return(
+          <div className="main-card">
+          <img
+            src={img}
+            alt="고양이"
+            width="400"
+          />
+            <button onClick={onHeartClick}
+                    onMouseOver={handleHeartMouseOver}>🤍</button>
+        </div>
+        )
+      }
+
+
+      const Title = (props)=>{
+
+        console.log("Title ==> render")
+
+        return(
+          <h1>{props.children}</h1>
+        )
+      }
+    
+      const Form = ({updateMainCat}) => {
+        
+        console.log("Form ==> render");
+
+        const [value, setValue] = React.useState('')
+        const [errorMessage, setErrorMessage] = React.useState('');
+        const includesHangul = (text) => /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/i.test(text);
+        
+        // const counterState = React.useState(1);
+        // console.log('counterState',counterState);
+        // const counter = counterState[0];
+        // const setCounter = counterState[1];
+ 
+        //useState사용시 이렇게 하는게 더 편하다
+        //const [counter, setCounter] = React.useState(1);
+
+
+        //함수 선언문안에서 또 함수를 선언함
+        // function handleFormSubmit(event){
+        //   event.preventDefault();
+        //   console.log('폼 전송됨');
+        //   setCounter(counter+1);
+        // }
+
+
+        function handlerInputChange(e){
+
+          const userValue = e.target.value;
+
+          setErrorMessage("") // 검증을 하기전에 일단 무조건 초기화
+
+          setValue(userValue.toUpperCase());
+          if(includesHangul(userValue) === true){
+            setErrorMessage('한글을 입력할 수 없습니다.');
+          }
+        }
+
+
+        function handleFormSubmit(e){
+          e.preventDefault();
+          setErrorMessage("")
+
+          if(value === ''){
+            setErrorMessage("빈 값으로 만들수 없다.")
+            
+            return;
+          }
+          
+          updateMainCat();
+        }
+
+
+        return(
+          <form onSubmit={props.handleFormSubmit}>
+            <input type="text" name="name" placeholder="영어 대사를 입력해주세요" onChange={handlerInputChange} value={value}/>
+            <button type="submit">생성</button>
+            <p>{errorMessage}</p>
+          </form>
+        )
+      }
+
+
+      const App = ()=>{
+
+        console.log("App ==> render");
+
+        const CAT1 = "https://cataas.com/cat/60b73094e04e18001194a309/says/react";
+        const CAT2 = "https://cataas.com//cat/5e9970351b7a400011744233/says/inflearn";
+        const CAT3 = "https://cataas.com/cat/595f280b557291a9750ebf65/says/JavaScript";
+
+        const cats = [CAT1,CAT2,CAT3];
+        const [counter, setCounter] = React.useState(
+         jsonLocalStorage.getItem("counter")
+        );
+        const [image, setImg] = React.useState(CAT1);
+        const [favorites, setFavorite] = React.useState(
+          jsonLocalStorage.getItem("favorites") || []
+        );
+
+        
+        function updateMainCat(event){
+          setImg(CAT2);
+          const nextCounter = counter + 1;
+          setCounter(nextCounter);
+          jsonLocalStorage.setItem("counter",nextCounter);
+        }
+
+        function handleHeartClick(event){
+          event.preventDefault();
+          console.log('하트 눌렀음');
+          const nextFavorits = [...favorties,CAT3]
+          setFavorite(nextFavorits);
+          jsonLocalStorage.setItem('favorites', nextFavorits);
+
+
+        }
+
+        return(
+          <div>
+            <Title>{counter}번째 고양이 가라사대</Title>
+            <Form updateMainCat={handleFormSubmit}/>
+            <MainCard img={image} onHeartClick={handleHeartClick}/>
+            <Favorites cats={favorites}/>
+          </div>
+        )
+      }
+
+
+      ReactDOM.render(<App/>, 여기다가그려);
+
+    </script>
+  </body>
+</html>
